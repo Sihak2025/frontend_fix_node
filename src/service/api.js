@@ -1,14 +1,12 @@
-/** @format */
 
 import axios from 'axios';
 
-const configuredBaseURL = (import.meta.env.VITE_API_URL || '/api').replace(
-  /\/+$/,
-  '',
-);
-const baseURL = configuredBaseURL.endsWith('/api')
-  ? configuredBaseURL
-  : `${configuredBaseURL}/api`;
+let cleanBaseURL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+if (cleanBaseURL.endsWith('/api')) {
+  cleanBaseURL = cleanBaseURL.slice(0, -4);
+}
+
+const baseURL = cleanBaseURL ? `${cleanBaseURL}/api` : '/api';
 
 const api = axios.create({
   baseURL,
@@ -17,7 +15,6 @@ const api = axios.create({
   },
 });
 
-// call token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ` + token;
