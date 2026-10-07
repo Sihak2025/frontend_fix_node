@@ -1,4 +1,4 @@
-
+<!-- @format -->
 <script setup>
   import { ref, computed, onMounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
@@ -59,8 +59,6 @@
 
       const response = await getProductById(productId);
 
-      console.log('PRODUCT RESPONSE:', response);
-
       const productData = response?.data;
 
       if (!response?.success || !productData?.id) {
@@ -89,8 +87,6 @@
           : [],
       };
 
-      console.log('PRODUCT:', product.value);
-      console.log('VARIANTS:', product.value.variants);
       if (hasVariants.value) {
         const firstAvailableVariant = product.value.variants.find(
           (variant) => Number(variant.stock) > 0,
@@ -123,13 +119,12 @@
     }
 
     selectedVariant.value = variant;
-
-  
     quantity.value = 1;
 
     errorMessage.value = '';
     successMessage.value = '';
   };
+
   const increaseQty = () => {
     if (quantity.value < availableStock.value) {
       quantity.value++;
@@ -142,18 +137,6 @@
     }
   };
 
-  const handleQuantityInput = () => {
-    let value = Number(quantity.value);
-
-    if (!Number.isInteger(value) || value < 1) {
-      quantity.value = 1;
-      return;
-    }
-
-    if (value > availableStock.value) {
-      quantity.value = availableStock.value;
-    }
-  };
   const handleOrder = async () => {
     errorMessage.value = '';
     successMessage.value = '';
@@ -207,11 +190,7 @@
         items: [item],
       };
 
-      console.log('ORDER PAYLOAD:', payload);
-
       const response = await createOrder(payload);
-
-      console.log('ORDER RESPONSE:', response);
 
       if (!response?.success) {
         throw new Error(
@@ -255,11 +234,10 @@
 
 <template>
   <div class="min-h-screen bg-slate-50 px-4 py-12">
-    <div class="mx-auto max-w-3xl">
+    <div class="mx-auto max-w-4xl">
       <div class="mb-8 flex w-full items-center justify-between">
         <div>
           <h1 class="text-3xl font-black text-slate-900">Place Order</h1>
-
           <p class="mt-2 text-slate-500">
             Review your product before placing the order.
           </p>
@@ -284,6 +262,7 @@
           </div>
         </router-link>
       </div>
+
       <div
         v-if="errorMessage"
         class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 font-medium text-rose-700">
@@ -294,154 +273,177 @@
         class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 font-medium text-emerald-700">
         {{ successMessage }}
       </div>
+
       <div
         v-if="product?.id"
         class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
         <div class="grid md:grid-cols-2">
-          <div class="bg-slate-100 p-8">
-            <img
-              :src="product.image"
-              :alt="product.name"
-              class="h-80 w-full rounded-2xl object-cover" />
-              <div class="w-50 h-50 bg-blue-400"></div>
-          </div>
-          <div class="flex flex-col justify-center p-8">
-            <p
-              class="mb-2 text-sm font-bold uppercase tracking-wider text-indigo-600">
-              Product
-            </p>
-            <h2 class="text-2xl font-black text-slate-900">
-              {{ product.name }}
-            </h2>
-            <p class="mt-3 text-2xl font-black text-indigo-600">
-              ${{ Number(product.price).toFixed(2) }}
-            </p>
-            <div
-              v-if="hasVariants"
-              class="mt-6">
-              <div class="mb-3 flex items-center justify-between">
-                <p class="text-sm font-bold text-slate-700">Select Size</p>
-                <span
-                  v-if="selectedVariant"
-                  class="text-sm font-semibold text-indigo-600">
-                  Selected:
-                  {{ selectedVariant.size }}
-                </span>
-              </div>
-              <div class="flex flex-wrap gap-3">
-                <button
-                  v-for="variant in product.variants"
-                  :key="variant.id"
-                  type="button"
-                  @click="selectVariant(variant)"
-                  :disabled="Number(variant.stock) <= 0 || isSubmitting"
-                  class="min-w-[60px] rounded-xl border px-5 py-3 text-sm font-bold transition"
-                  :class="
-                    selectedVariant?.id === variant.id
-                      ? 'border-indigo-600 bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                      : Number(variant.stock) <= 0
-                        ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 line-through'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-500 hover:text-indigo-600'
-                  ">
-                  {{ variant.size }}
-                </button>
-              </div>
+          <!-- Left Column: Image AND Description Underneath -->
+          <div class="bg-slate-50 p-8 flex flex-col border-r border-slate-100">
+            <div class="w-full overflow-hidden rounded-2xl shadow-sm bg-white">
+              <img
+                :src="product.image"
+                :alt="product.name"
+                class="h-72 w-full object-cover" />
             </div>
-            <div class="mt-5">
-              <div
-                v-if="selectedVariant && availableStock > 0"
-                class="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
-                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
 
-                Size {{ selectedVariant.size }}: {{ availableStock }} item(s)
-                available
-              </div>
-              <div
-                v-else-if="selectedVariant && availableStock <= 0"
-                class="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">
-                <span class="h-2 w-2 rounded-full bg-rose-500"></span>
-
-                Size {{ selectedVariant.size }}
-                is Out of Stock
-              </div>
-              <div
-                v-else-if="!hasVariants && availableStock > 0"
-                class="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
-                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-
-                {{ availableStock }}
-                item(s) available
-              </div>
-              <div
-                v-else-if="hasVariants && !selectedVariant"
-                class="rounded-lg bg-amber-50 px-3 py-2 text-sm font-bold text-amber-700">
-                Please select a size.
-              </div>
-              <div
-                v-else
-                class="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">
-                <span class="h-2 w-2 rounded-full bg-rose-500"></span>
-
-                Out of Stock
-              </div>
-            </div>
-            <div class="mt-8">
-              <p class="mb-3 text-sm font-bold text-slate-700">Quantity</p>
-              <div
-                class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-100 p-1">
-                <button
-                  type="button"
-                  @click="decreaseQty"
-                  :disabled="quantity <= 1 || isOutOfStock || isSubmitting"
-                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-lg font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                  -
-                </button>
-                <span class="w-14 text-center font-bold text-slate-900">
-                  {{ quantity }}
-                </span>
-                <button
-                  type="button"
-                  @click="increaseQty"
-                  :disabled="
-                    quantity >= availableStock || isOutOfStock || isSubmitting
-                  "
-                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-lg font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                  +
-                </button>
-              </div>
+            <!-- Description Box right under the image -->
+            <div class="mt-6 flex-1">
+              <h3
+                class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
+                Product Description
+              </h3>
               <p
-                v-if="isStockInsufficient && !isOutOfStock"
-                class="mt-2 text-sm font-medium text-rose-600">
-                Only {{ availableStock }} item(s) available.
+                class="text-sm text-slate-600 leading-relaxed bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                {{
+                  product.description ||
+                  'No description available for this product.'
+                }}
               </p>
             </div>
-            <div
-              class="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
-              <span class="font-bold text-slate-500"> Total </span>
-              <span class="text-2xl font-black text-slate-900">
-                ${{ totalAmount }}
-              </span>
+          </div>
+
+          <!-- Right Column: Product Info & Actions -->
+          <div class="flex flex-col justify-between p-8">
+            <div>
+              <p
+                class="mb-2 text-sm font-bold uppercase tracking-wider text-indigo-600">
+                Product
+              </p>
+              <h2 class="text-2xl font-black text-slate-900">
+                {{ product.name }}
+              </h2>
+              <p class="mt-3 text-2xl font-black text-indigo-600">
+                ${{ Number(product.price).toFixed(2) }}
+              </p>
+
+              <div
+                v-if="hasVariants"
+                class="mt-6">
+                <div class="mb-3 flex items-center justify-between">
+                  <p class="text-sm font-bold text-slate-700">Select Size</p>
+                  <span
+                    v-if="selectedVariant"
+                    class="text-sm font-semibold text-indigo-600">
+                    Selected: {{ selectedVariant.size }}
+                  </span>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    v-for="variant in product.variants"
+                    :key="variant.id"
+                    type="button"
+                    @click="selectVariant(variant)"
+                    :disabled="Number(variant.stock) <= 0 || isSubmitting"
+                    class="min-w-[60px] rounded-xl border px-5 py-3 text-sm font-bold transition"
+                    :class="
+                      selectedVariant?.id === variant.id
+                        ? 'border-indigo-600 bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                        : Number(variant.stock) <= 0
+                          ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 line-through'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-500 hover:text-indigo-600'
+                    ">
+                    {{ variant.size }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="mt-5">
+                <div
+                  v-if="selectedVariant && availableStock > 0"
+                  class="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
+                  <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  Size {{ selectedVariant.size }}: {{ availableStock }} item(s)
+                  available
+                </div>
+                <div
+                  v-else-if="selectedVariant && availableStock <= 0"
+                  class="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">
+                  <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+                  Size {{ selectedVariant.size }} is Out of Stock
+                </div>
+                <div
+                  v-else-if="!hasVariants && availableStock > 0"
+                  class="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
+                  <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  {{ availableStock }} item(s) available
+                </div>
+                <div
+                  v-else-if="hasVariants && !selectedVariant"
+                  class="rounded-lg bg-amber-50 px-3 py-2 text-sm font-bold text-amber-700">
+                  Please select a size.
+                </div>
+                <div
+                  v-else
+                  class="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700">
+                  <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+                  Out of Stock
+                </div>
+              </div>
+
+              <div class="mt-6">
+                <p class="mb-3 text-sm font-bold text-slate-700">Quantity</p>
+                <div
+                  class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-100 p-1">
+                  <button
+                    type="button"
+                    @click="decreaseQty"
+                    :disabled="quantity <= 1 || isOutOfStock || isSubmitting"
+                    class="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-lg font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                    -
+                  </button>
+                  <span class="w-14 text-center font-bold text-slate-900">
+                    {{ quantity }}
+                  </span>
+                  <button
+                    type="button"
+                    @click="increaseQty"
+                    :disabled="
+                      quantity >= availableStock || isOutOfStock || isSubmitting
+                    "
+                    class="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-lg font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                    +
+                  </button>
+                </div>
+                <p
+                  v-if="isStockInsufficient && !isOutOfStock"
+                  class="mt-2 text-sm font-medium text-rose-600">
+                  Only {{ availableStock }} item(s) available.
+                </p>
+              </div>
             </div>
-            <button
-              type="button"
-              @click="handleOrder"
-              :disabled="
-                isSubmitting ||
-                isOutOfStock ||
-                isStockInsufficient ||
-                (hasVariants && !selectedVariant)
-              "
-              class="mt-6 w-full rounded-2xl bg-indigo-600 px-6 py-4 font-bold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none">
-              <span v-if="isSubmitting"> Creating Order... </span>
-              <span v-else-if="hasVariants && !selectedVariant">
-                Select Size
-              </span>
-              <span v-else-if="isOutOfStock"> Out of Stock </span>
-              <span v-else> Place Order </span>
-            </button>
+
+            <div class="mt-8">
+              <div
+                class="flex items-center justify-between border-t border-slate-200 pt-4 mb-4">
+                <span class="font-bold text-slate-500">Total</span>
+                <span class="text-2xl font-black text-slate-900">
+                  ${{ totalAmount }}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                @click="handleOrder"
+                :disabled="
+                  isSubmitting ||
+                  isOutOfStock ||
+                  isStockInsufficient ||
+                  (hasVariants && !selectedVariant)
+                "
+                class="w-full rounded-2xl bg-indigo-600 px-6 py-4 font-bold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none">
+                <span v-if="isSubmitting">Creating Order...</span>
+                <span v-else-if="hasVariants && !selectedVariant"
+                  >Select Size</span
+                >
+                <span v-else-if="isOutOfStock">Out of Stock</span>
+                <span v-else>Place Order</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
       <div
         v-else
         class="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-lg">
