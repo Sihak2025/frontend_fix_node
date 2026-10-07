@@ -303,6 +303,7 @@
               :src="product.image"
               :alt="product.name"
               class="h-80 w-full rounded-2xl object-cover" />
+              <div class="w-50 h-50 bg-blue-400"></div>
           </div>
           <div class="flex flex-col justify-center p-8">
             <p
